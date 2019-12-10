@@ -88,8 +88,45 @@ class WCNFFormula(object):
         """Generates a new formula that is the 1,3-WPM equivalent
         of this one."""
         formula13 = WCNFFormula()
-        raise NotImplementedError("Your code here")
+        # Create Variables
+        formula13.num_vars=self.num_vars
+        hard_clauses=[]
+        #Create Soft clauses
+        for n in self.soft:
+            var = formula13.new_var()
+            formula13.add_clause([-var], weight = n[0])
+            hard_clauses+=(n[1]+[var])
+        # Create Hard Clauses
+        for n in self.hard:
+            var = formula13.new_var()
+            hard_clauses+=[-var]
+            hard_clauses+=(n+[var])
+
+        formula13 = self.hard_three_literals(list(hard_clauses),formula13):
+           
+
         return formula13
+
+    def hard_three_literals(self,hard_clauses,formula13):
+        list_three_literals=[]
+        for clause in hard_clauses:
+            if len(clause) == 3:
+                formula13.add_clause(clause, weight=TOP_WEIGHT)
+            elif len(clause) < 3:
+                formula13.add_clause((clause * 3)[0:3], weight = TOP_WEIGHT)
+            else:
+                i=0
+                reconst_list=[]
+                for literal in clause
+                    if len(reconst_list) < 2:
+                        reconst_list.append(literal)
+                    else:
+                        var=formula13.new_var()
+                        reconst_list.append(var)
+                        formula13.add_clause(reconst_list, weight = TOP_WEIGHT)
+                        reconst_list=[]
+                        reconst_list.append(-var)
+            return formula13
 
     def sum_soft_weights(self):
         return self._sum_soft_weights

@@ -104,6 +104,17 @@ class Graph(object):
         # Create variables
         nodes = [formula.new_var() for _ in range(self.n_nodes)]
         # Create soft clausules
+        for n in nodes:
+            formula.add_clause([-n],weight=1)
+        # Create hard clausules
+        for n1,n2 in self.edges:
+            v1,v2 = nodes[n1 - 1], nodes[n2 - 1]
+            formula.add_clause([v1, v2],weight=wcnf.TOP_WEIGHT)
+
+        #Solve formula
+        opt, model = solver.solve(formula)
+
+        return [n for n in model if n>0]
 
     def max_clique(self, solver):
         """Computes the maximum clique of the graph.
@@ -111,7 +122,36 @@ class Graph(object):
         :param solver: An instance of MaxSATRunner.
         :return: A solution (list of nodes).
         """
-        raise NotImplementedError("Your Code Here")
+        # Initialize formula
+        formula = wcnf.WCNFFormula()
+        # Create variables
+        nodes = [formula.new_var() for _ in range(self.n_nodes)]
+        # Create soft clausules
+        for n in nodes:
+            formula.add_clause([n],weight=1)
+        # Make a list of all possible edges 
+        all_edges = self.all_possible_edges(self.n_nodes)
+
+        # Delete graph edges from all edges
+        for n1,n2 in self.edges:
+            all_edges.remove((n1,n2))
+            all_edges.remove((n2,n1))
+        
+        # Create hard clausules  
+        for n1,n2 in all_edges:
+            v1,v2 = nodes[n1 -1], nodes[n2 -1]
+            formula.add_clause([-v1, -v2],weight=wcnf.TOP_WEIGHT)
+        #Solve formula
+        opt, model = solver.solve(formula)
+
+        return [n for n in model if n>0]
+
+    def all_possible_edges(self,n_nodes):
+        edges=[]
+        nodes = [ n for n in range(self.n_nodes)]
+        for n in nodes:
+            edges+=[(n+1,n1+1) for n1 in nodes if n1 != n] #and (n1+1,n+1) not in edges
+        return list(edges)
 
     def max_cut(self, solver):
         """Computes the maximum cut of the graph.
@@ -119,7 +159,18 @@ class Graph(object):
         :param solver: An instance of MaxSATRunner.
         :return: A solution (list of nodes).
         """
-        raise NotImplementedError("Your Code Here")
+        # Initialize formula
+        formula = wcnf.WCNFFormula()
+        # Create variables
+        nodes = [formula.new_var() for _ in range(self.n_nodes)]
+        # Create soft clausules
+        for n1,n2 in self.edges:
+            formula.add_clause([n1,n2], weight = 1)
+            formula.add_clause([-n1,-n2], weight = 1)
+        #Solve formula
+        opt, model = solver.solve(formula)
+
+        return [n for n in model if n>0]
     
 
 # Program main
@@ -134,11 +185,11 @@ def main(argv=None):
     if args.visualize:
         graph.visualize(os.path.basename(args.graph))
 
-    min_vertex_cover = graph.min_vertex_cover(solver)
-    print("MVC", " ".join(map(str, min_vertex_cover)))
+    #min_vertex_cover = graph.min_vertex_cover(solver)
+    #print("MVC", " ".join(map(str, min_vertex_cover)))
 
-    #max_clique = graph.max_clique(solver)
-    #print("MCLIQUE", " ".join(map(str, max_clique)))
+    max_clique = graph.max_clique(solver)
+    print("MCLIQUE", " ".join(map(str, max_clique)))
 
     #max_cut = graph.max_cut(solver)
     #print("MCUT", " ".join(map(str, max_cut)))
